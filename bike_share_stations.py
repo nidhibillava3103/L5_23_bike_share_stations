@@ -1,4 +1,4 @@
-import random
+import secrets
 import sqlite3
 
 conn = sqlite3.connect(":memory:")
@@ -6,9 +6,13 @@ conn.execute("CREATE TABLE stations (id INTEGER PRIMARY KEY, name TEXT, capacity
 
 
 def addStation(name, capacity, bikes, log=[]):
-    conn.execute("INSERT INTO stations (name, capacity, bikes) VALUES ('" + name + "', " + str(capacity) + ", " + str(bikes) + ")")
+    conn.execute(
+        "INSERT INTO stations (name, capacity, bikes) VALUES (?, ?, ?)",
+        (name, capacity, bikes)
+    )
     log.append(name)
     return log
+
 
 
 def rentBike(station_id):
@@ -19,7 +23,7 @@ def rentBike(station_id):
 
 
 def unlockPin():
-    return random.randint(1000, 9999)
+    return secrets.randbelow(1000)
 
 
 def fullStations():
@@ -30,9 +34,12 @@ def fullStations():
 
 def resetStation(station_id):
     try:
-        conn.execute("UPDATE stations SET bikes = 0 WHERE id = ?", (station_id,))
-    except Exception:
-        pass
+        conn.execute(
+            "UPDATE stations SET bikes = 0 WHERE id = ?",
+            (station_id,)
+        )
+    except sqlite3.Error as error:
+        print(f"Database error: {error}")
 
 
 def hasBikes(station_id):
